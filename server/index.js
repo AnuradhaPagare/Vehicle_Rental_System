@@ -1,34 +1,30 @@
-const express = require("express");
-const Razorpay = require("razorpay");
-const cors = require("cors");
-require("dotenv").config();
+import dotenv from "dotenv";
+dotenv.config();
+import express from "express";
+import cors from "cors";
 
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+//import paymentRoutes from "./routes/paymentRoutes.js";
+
+import paymentRoutes from "./routes/payment.js";
 const app = express();
-app.use(cors());
+
+// ✅ Connect Database
+connectDB();
+
+// ✅ Middleware
 app.use(express.json());
+app.use(cors({
+  origin: "http://localhost:5173", // ✅ your Vite frontend URL
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true,
+}));
 
-const instance = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+// ✅ Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/payment", paymentRoutes);
 
-app.post("/order", async (req, res) => {
-  try {
-    const options = {
-      amount: req.body.amount,
-      currency: "INR",
-      receipt: "receipt_order_" + Date.now(),
-    };
-
-    const order = await instance.orders.create(options);
-    res.json(order);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Something went wrong");
-  }
-});
-
+// ✅ Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log("Server is running on port", PORT);
-});
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

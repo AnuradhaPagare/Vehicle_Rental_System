@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ref, get } from "firebase/database";
 import { database } from "../Firebase.js";
-import cycle_Title_Background from "../images/cycle_Title_Background.jpeg"; 
+import cycle_Title_Background from "../images/cycle_Title_Background.jpeg";
+import { useNavigate } from "react-router-dom";
 import {
   Box,
   Card,
@@ -15,14 +16,14 @@ import {
 
 const CycleSection = () => {
   const [cycles, setCycles] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCycles = async () => {
       const dbRef = ref(database, "cycles");
       const snapshot = await get(dbRef);
       if (snapshot.exists()) {
-        const data = snapshot.val();
-        const cyclesArray = Object.entries(data).map(([key, value]) => ({
+        const cyclesArray = Object.entries(snapshot.val()).map(([key, value]) => ({
           id: key,
           ...value,
         }));
@@ -35,91 +36,68 @@ const CycleSection = () => {
     fetchCycles();
   }, []);
 
+
+  const handleBookNow = (cycle) => {
+  localStorage.removeItem("selectedCar");
+  localStorage.removeItem("selectedBike");
+  localStorage.setItem("selectedCycle", JSON.stringify(cycle));
+  window.location.href = "/login";
+};
+
+
   return (
     <Box sx={{ p: 4 }}>
-      {/* Title Section */}
+       
       <Box
         sx={{
           mb: 6,
-          position: "relative",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
           minHeight: "200px",
           backgroundImage: `url(${cycle_Title_Background})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          backgroundAttachment: "fixed",
           borderRadius: 2,
-          overflow: "hidden",
         }}
       >
-        <Box
+         {/* Back Button */}
+          <Button 
+            variant="contained" 
+            color="secondary" 
+            sx={{ mb: 3 }} 
+            onClick={() => navigate("/")}
+          >
+            ⬅️ Back
+          </Button>
+        <Typography
+          variant="h3"
+          align="center"
           sx={{
-            position: "relative",
-            zIndex: 2,
-            px: 6,
-            py: 4,
-            borderRadius: "16px",
-            backdropFilter: "blur(12px)",
-            background: "rgba(255, 255, 255, 0.2)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.3)",
-            transition: "transform 0.4s ease",
-            "&:hover": {
-              transform: "scale(1.05) rotateX(5deg)",
-            },
+            pt: 6,
+            pb: 6,
+            fontFamily: `'Orbitron', sans-serif`,
+            fontWeight: 700,
+            color: "#fff",
+            textShadow: "2px 2px 8px rgba(0,0,0,0.5)",
           }}
         >
-          <Typography
-            variant="h3"
-            align="center"
-            sx={{
-              fontFamily: `'Orbitron', sans-serif`,
-              fontWeight: 700,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
-              color: "#ffffff",
-              textShadow: "2px 2px 8px rgba(0,0,0,0.5)",
-            }}
-          >
-            🚲 Cycles Section
-          </Typography>
-        </Box>
+          🚲 Cycles Section
+        </Typography>
       </Box>
 
-      {/* Cycles Grid */}
       <Grid container spacing={3}>
         {cycles.map((cycle) => (
           <Grid item key={cycle.id} xs={12} sm={6} md={3}>
-            <Card
-              sx={{
-                maxWidth: 340,
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
+            <Card sx={{ maxWidth: 340, height: "100%", display: "flex", flexDirection: "column" }}>
               <CardMedia
                 component="img"
                 image={cycle.imageUrl}
                 alt={cycle.name}
-                sx={{
-                  height: 180,
-                  objectFit: "cover",
-                  objectPosition: "center",
-                }}
+                sx={{ height: 180, objectFit: "cover" }}
               />
               <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="div">
-                  {cycle.name}
-                </Typography>
+                <Typography variant="h6">{cycle.name}</Typography>
                 <Typography variant="body2" color="text.secondary">
                   <strong>Brand:</strong> {cycle.brand}<br />
                   <strong>Model:</strong> {cycle.model}<br />
-                  <strong>Fuel:</strong> {cycle.fuelType}<br />
-                  <strong>Seats:</strong> {cycle.seats}<br />
-                  <strong>Transmission:</strong> {cycle.transmission}<br />
                   <strong>Type:</strong> {cycle.type}<br />
                   <strong>Description:</strong> {cycle.description}
                 </Typography>
@@ -127,19 +105,12 @@ const CycleSection = () => {
                   ₹{cycle.pricePerDay} / day
                 </Typography>
               </CardContent>
+
               <CardActions sx={{ justifyContent: "space-between", px: 2, pb: 2 }}>
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={() => alert(`Book ${cycle.name}`)}
-                >
+                <Button variant="contained" onClick={() => handleBookNow(cycle)}>
                   Book Now
                 </Button>
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => alert(`View details for ${cycle.name}`)}
-                >
+                <Button variant="outlined" onClick={() => alert(`View details for ${cycle.name}`)}>
                   View Details
                 </Button>
               </CardActions>
