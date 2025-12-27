@@ -45,8 +45,10 @@ export default function Login() {
         localStorage.setItem("name", data.user.name);
         localStorage.setItem("username", data.user.username);
         localStorage.setItem("mobile", data.user.mobile);
+        localStorage.setItem("userId", data.user._id);
 
-        navigate("/checkin"); // redirect user
+
+        navigate("/"); // redirect user
       } else {
         setErrorMessage(data.message || "Invalid credentials"); // ✅ Display red error
       }

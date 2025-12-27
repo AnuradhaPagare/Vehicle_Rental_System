@@ -10,7 +10,7 @@ import Car_Section from "./Components/Car_Section";
 import Bike_Section from "./Components/Bike_Section";
 import Cycle_Section from "./Components/Cycle_Section";
 import UserDashboard from "./Pages/UserDashboard";
-
+import UserBookings from "./Components/UserBookings";
 
 
 function App() {
@@ -25,7 +25,7 @@ function App() {
         <Route path="/bikes" element={<Bike_Section />} />
         <Route path="/cycles" element={<Cycle_Section />} />
         <Route path="/user-dashboard" element={<UserDashboard />} />
-        
+        <Route path="/user-bookings" element={<UserBookings />} />
         {/* ✅ Protected CheckIn Page */}
         <Route
           path="/checkin"

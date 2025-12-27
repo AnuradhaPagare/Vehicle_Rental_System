@@ -1,17 +1,17 @@
-import React from "react";
-import { Card, CardContent, CardHeader, Avatar, Divider, Button } from "@mui/material";
-import { styled } from "@mui/material/styles";
+import React, { useEffect, useState } from "react";
 import {
-  Edit as EditIcon,
-  DirectionsCar as CarIcon,
-  TwoWheeler as BikeIcon,
-  PedalBike as CycleIcon,
-  Favorite as FavoriteIcon,
-  History as HistoryIcon,
-  Settings as SettingsIcon,
-} from "@mui/icons-material";
+  Card,
+  CardContent,
+  CardHeader,
+  Avatar,
+  Divider,
+  Button,
+  TextField,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { Edit as EditIcon, Save as SaveIcon, History as HistoryIcon } from "@mui/icons-material";
 
-// Glassmorphism background
+// --- Styled Components ---
 const GlassContainer = styled("div")({
   minHeight: "100vh",
   width: "100%",
@@ -22,7 +22,6 @@ const GlassContainer = styled("div")({
   padding: "100px 20px 50px",
 });
 
-// Section wrapper
 const Section = styled("div")({
   display: "flex",
   flexWrap: "wrap",
@@ -32,7 +31,6 @@ const Section = styled("div")({
   maxWidth: "1200px",
 });
 
-// Glass-style card
 const GlassCard = styled(Card)({
   width: "340px",
   borderRadius: "16px",
@@ -47,82 +45,120 @@ const GlassCard = styled(Card)({
 });
 
 export default function UserDashboard() {
-  // Mock data (later you can fetch from backend)
-  const user = {
-    name: "Anuradha Sharma",
-    email: "anuradha@example.com",
-    phone: "+91 98765 43210",
-    address: "Pune, Maharashtra, India",
+  const [user, setUser] = useState(null);
+  const [bookingHistory, setBookingHistory] = useState([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
+
+  useEffect(() => {
+    const userId = localStorage.getItem("userId");
+    if (!userId) return;
+
+    // --- Fetch user profile ---
+    fetch(`http://localhost:5000/api/auth/user/${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        setUser(data);
+        setFormData({
+          name: data.name || "",
+          username: data.username || "",
+          mobile: data.mobile || "",
+          address: data.address || "",
+        });
+      })
+      .catch((err) => console.error("Error loading user:", err));
+
+    // --- Fetch booking history ---
+    fetch(`http://localhost:5000/api/booking/user/${userId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.bookings)) {
+          setBookingHistory(data.bookings);
+        }
+      })
+      .catch((err) => console.error("Error loading bookings:", err));
+  }, []);
+
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+
+  const handleSave = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      const res = await fetch(`http://localhost:5000/api/auth/user/${userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setUser(data.updatedUser);
+        setIsEditing(false);
+        alert("Profile updated successfully!");
+      } else {
+        alert(data.message || "Failed to update profile");
+      }
+    } catch (err) {
+      console.error("Update Error:", err);
+      alert("Server error. Try again later.");
+    }
   };
 
-  const bookingHistory = [
-    { vehicle: "Honda City", type: "Car", date: "12 Oct 2025", price: "₹1,500/day" },
-    { vehicle: "Royal Enfield Classic 350", type: "Bike", date: "01 Nov 2025", price: "₹900/day" },
-  ];
-
-  const favorites = [
-    { title: "Tesla Model 3", icon: <CarIcon sx={{ color: "#00796b" }} /> },
-    { title: "Yamaha MT-15", icon: <BikeIcon sx={{ color: "#00796b" }} /> },
-    { title: "Hero Sprint", icon: <CycleIcon sx={{ color: "#00796b" }} /> },
-  ];
+  if (!user) return <h2>Loading user info...</h2>;
 
   return (
     <GlassContainer>
-      {/* Title */}
       <h1 className="text-4xl font-bold mb-8 text-gray-800">User Dashboard</h1>
 
-      {/* Section: Personal Info */}
       <Section>
+        {/* ---------- PERSONAL INFO ---------- */}
         <GlassCard>
           <CardHeader
-            avatar={<Avatar sx={{ bgcolor: "#008080" }}>{user.name[0]}</Avatar>}
+            avatar={<Avatar sx={{ bgcolor: "#008080" }}>{user.name?.[0]}</Avatar>}
             title="Personal Information"
           />
           <Divider />
           <CardContent>
-            <p><strong>Name:</strong> {user.name}</p>
-            <p><strong>Email:</strong> {user.email}</p>
-            <p><strong>Phone:</strong> {user.phone}</p>
-            <p><strong>Address:</strong> {user.address}</p>
-            <Button
-              variant="contained"
-              startIcon={<EditIcon />}
-              sx={{
-                mt: 2,
-                background: "#008080",
-                "&:hover": { background: "#006666" },
-              }}
-            >
-              Edit Profile
-            </Button>
+            {isEditing ? (
+              <>
+                <TextField label="Name" name="name" value={formData.name} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
+                <TextField label="Username" name="username" value={formData.username} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
+                <TextField label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
+                <TextField label="Address" name="address" value={formData.address} onChange={handleChange} fullWidth sx={{ mb: 2 }} />
+                <Button variant="contained" startIcon={<SaveIcon />} onClick={handleSave} sx={{ mt: 2, background: "#008080", "&:hover": { background: "#006666" } }}>Save</Button>
+              </>
+            ) : (
+              <>
+                <p><strong>Name:</strong> {user.name}</p>
+                <p><strong>Username:</strong> {user.username}</p>
+                <p><strong>Mobile:</strong> {user.mobile}</p>
+                <p><strong>Address:</strong> {user.address}</p>
+                <Button variant="contained" startIcon={<EditIcon />} onClick={() => setIsEditing(true)} sx={{ mt: 2, background: "#008080", "&:hover": { background: "#006666" } }}>Edit Profile</Button>
+              </>
+            )}
           </CardContent>
         </GlassCard>
 
-        {/* Booking History */}
+        {/* ---------- BOOKING HISTORY ---------- */}
         <GlassCard>
-          <CardHeader
-            avatar={<HistoryIcon sx={{ color: "#008080" }} />}
-            title="Booking History"
-          />
+          <CardHeader avatar={<HistoryIcon sx={{ color: "#008080" }} />} title="Booking History" />
           <Divider />
           <CardContent>
-            {bookingHistory.map((item, i) => (
-              <div key={i} style={{ marginBottom: "12px" }}>
-                <p><strong>{item.vehicle}</strong> ({item.type})</p>
-                <p>{item.date} — {item.price}</p>
-                <Divider sx={{ my: 1 }} />
-              </div>
-            ))}
-            <Button
-              size="small"
-              sx={{
-                textTransform: "none",
-                color: "#008080",
-                "&:hover": { textDecoration: "underline" },
-              }}
-            >
-              View All Bookings
-            </Button>
+            {bookingHistory.length === 0 ? (
+              <p>No bookings yet</p>
+            ) : (
+              bookingHistory.map((item, index) => (
+                <div key={index} style={{ marginBottom: "12px" }}>
+                  <p><strong>{item.vehicleName}</strong> ({item.vehicleType})</p>
+                  <p>{item.date} – ₹{item.price}</p>
+                  <Divider sx={{ my: 1 }} />
+                </div>
+              ))
+            )}
+            {bookingHistory.length > 0 && (
+              <Button size="small" onClick={() => window.location.href = "/user-bookings"} sx={{ textTransform: "none", color: "#008080", "&:hover": { textDecoration: "underline" } }}>
+                View All Bookings
+              </Button>
+            )}
           </CardContent>
         </GlassCard>
       </Section>

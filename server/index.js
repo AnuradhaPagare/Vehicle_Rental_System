@@ -6,6 +6,7 @@ import cors from "cors";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 //import paymentRoutes from "./routes/paymentRoutes.js";
+import bookingRoutes from "./routes/bookingRoutes.js";
 
 import paymentRoutes from "./routes/payment.js";
 const app = express();
@@ -24,6 +25,10 @@ app.use(cors({
 // ✅ Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/booking", bookingRoutes);
+
+
+
 
 // ✅ Server
 const PORT = process.env.PORT || 5000;

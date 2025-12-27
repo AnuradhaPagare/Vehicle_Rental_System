@@ -2,6 +2,21 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js"; // Make sure this file uses ES module export
 
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true }).select("-password");
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    res.json({ success: true, updatedUser });
+  } catch (error) {
+    console.error("❌ Update User Error:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 // ✅ Register User
 export const registerUser = async (req, res) => {
   try {
@@ -30,7 +45,7 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// ✅ Login User
+// ✅ Login User (FIXED)
 export const loginUser = async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -55,9 +70,11 @@ export const loginUser = async (req, res) => {
       message: "Login successful",
       token,
       user: {
-        id: user._id,
+        _id: user._id,        // 👈 FIXED — use _id
         name: user.name,
         username: user.username,
+        mobile: user.mobile,
+        address: user.address,
       },
     });
   } catch (error) {
@@ -65,3 +82,4 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+

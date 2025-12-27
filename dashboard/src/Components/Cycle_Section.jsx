@@ -41,7 +41,7 @@ const CycleSection = () => {
   localStorage.removeItem("selectedCar");
   localStorage.removeItem("selectedBike");
   localStorage.setItem("selectedCycle", JSON.stringify(cycle));
-  window.location.href = "/login";
+  window.location.href = "/checkin";
 };
 
 

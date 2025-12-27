@@ -12,7 +12,7 @@ const bookingSchema = new mongoose.Schema(
     vehicleType: { type: String, required: true },
 
     // Receiving / Pickup Date & Time
-    date: { type: String, required: true }, // stored as dd/mm/yyyy
+    date: { type: String, required: true }, 
     hour: { type: String, required: true },
     minute: { type: String, required: true },
     ampm: { type: String, required: true },
@@ -22,7 +22,7 @@ const bookingSchema = new mongoose.Schema(
     returnMinute: { type: String, required: true },
     returnAmpm: { type: String, required: true },
 
-    price: { type: Number, required: true }, // price per day
+    price: { type: Number, required: true },
     paymentId: { type: String, required: true },
     orderId: { type: String, required: true },
 

@@ -24,7 +24,7 @@ const CarsSection = () => {
     localStorage.removeItem("selectedBike");
     localStorage.removeItem("selectedCycle");
     localStorage.setItem("selectedCar", JSON.stringify(car));
-    window.location.href = "/login";
+    window.location.href = "/checkin";
   };
 
   const [vehicles, setVehicles] = useState([]);

@@ -14,7 +14,10 @@ import {
   ListItemText,
   Button,
   Collapse,
+  Menu,
+  MenuItem,
 } from "@mui/material";
+
 import {
   Menu as MenuIcon,
   ChevronLeft as ChevronLeftIcon,
@@ -30,12 +33,12 @@ import {
   Settings as GearIcon,
   AttachMoney as MoneyIcon,
 } from "@mui/icons-material";
+
 import Search from "./Search";
 import { useNavigate } from "react-router-dom";
 
 const drawerWidth = 240;
 
-// 3D Glass Styled AppBar
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
 })(({ theme, open }) => ({
@@ -62,6 +65,8 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 export default function Navbar() {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+
+  // Filters
   const [filterOpen, setFilterOpen] = useState(false);
   const [priceOpen, setPriceOpen] = useState(false);
   const [fuelOpen, setFuelOpen] = useState(false);
@@ -72,17 +77,27 @@ export default function Navbar() {
   const handleDrawerOpen = () => setOpen(true);
   const handleDrawerClose = () => setOpen(false);
 
+  // Profile dropdown
+  const [anchorEl, setAnchorEl] = useState(null);
+  const menuOpen = Boolean(anchorEl);
+
+  const handleProfileClick = (event) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const isLoggedIn = !!localStorage.getItem("token"); // 👈 check login
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    handleMenuClose();
+    navigate("/login");
+  };
+
   return (
     <>
       <AppBar position="fixed" open={open}>
-        <Toolbar
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 2,
-          }}
-        >
-          {/* Drawer Button */}
+        <Toolbar sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          
+          {/* Drawer Open Button */}
           <IconButton
             color="inherit"
             onClick={handleDrawerOpen}
@@ -103,12 +118,8 @@ export default function Navbar() {
               flexGrow: 1,
               fontWeight: 700,
               letterSpacing: "1.5px",
-              textShadow: "0px 2px 8px rgba(0,0,0,0.4)",
               cursor: "pointer",
-              "&:hover": {
-                transform: "translateY(-2px)",
-                transition: "0.3s ease",
-              },
+              textShadow: "0px 2px 8px rgba(0,0,0,0.4)",
             }}
             onClick={() => navigate("/")}
           >
@@ -118,39 +129,18 @@ export default function Navbar() {
           {/* Search */}
           <Search onSearch={(q) => console.log("Searching:", q)} />
 
-          {/* Links */}
-          <Button
-            color="inherit"
-            sx={{
-              ml: 2,
-              textTransform: "none",
-              fontWeight: 500,
-              "&:hover": { transform: "translateY(-2px)" },
-              transition: "0.3s",
-            }}
-            onClick={() => navigate("/about")}
-          >
+          {/* Navbar Buttons */}
+          <Button color="inherit" onClick={() => navigate("/about")}>
             About
           </Button>
-
-          <Button
-            color="inherit"
-            sx={{
-              ml: 1,
-              textTransform: "none",
-              fontWeight: 500,
-              "&:hover": { transform: "translateY(-2px)" },
-              transition: "0.3s",
-            }}
-            onClick={() => navigate("/contact")}
-          >
+          <Button color="inherit" onClick={() => navigate("/contact")}>
             Contact
           </Button>
 
-          {/* Profile Icon */}
+          {/* Profile Icon with dropdown */}
           <IconButton
             color="inherit"
-            onClick={() => navigate("/user-dashboard")}
+            onClick={handleProfileClick}
             sx={{
               "&:hover": { transform: "scale(1.15)" },
               transition: "0.3s",
@@ -158,6 +148,50 @@ export default function Navbar() {
           >
             <ProfileIcon />
           </IconButton>
+
+          {/* PROFILE MENU */}
+          <Menu
+            anchorEl={anchorEl}
+            open={menuOpen}
+            onClose={handleMenuClose}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+          >
+            {isLoggedIn ? (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/user-dashboard");
+                  }}
+                >
+                  Profile
+                </MenuItem>
+
+                <MenuItem onClick={handleLogout}>Logout</MenuItem>
+              </>
+            ) : (
+              <>
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/login");
+                  }}
+                >
+                  Login
+                </MenuItem>
+
+                <MenuItem
+                  onClick={() => {
+                    handleMenuClose();
+                    navigate("/register");
+                  }}
+                >
+                  Register
+                </MenuItem>
+              </>
+            )}
+          </Menu>
         </Toolbar>
       </AppBar>
 
@@ -171,19 +205,22 @@ export default function Navbar() {
             width: drawerWidth,
             backdropFilter: "blur(5px)",
             background: "rgba(255,255,255,0.85)",
-            boxShadow: "6px 0px 20px rgba(0,0,0,0.15)",
           },
         }}
       >
         <DrawerHeader>
           <IconButton onClick={handleDrawerClose}>
-            {theme.direction === "ltr" ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+            {theme.direction === "ltr" ? (
+              <ChevronLeftIcon />
+            ) : (
+              <ChevronRightIcon />
+            )}
           </IconButton>
         </DrawerHeader>
 
         <Divider />
 
-        {/* Vehicle List */}
+        {/* Vehicle Categories */}
         <List>
           {[
             { text: "Cars", icon: <CarIcon />, path: "/cars" },
@@ -196,16 +233,6 @@ export default function Navbar() {
                   navigate(item.path);
                   handleDrawerClose();
                 }}
-                sx={{
-                  borderRadius: "8px",
-                  mx: 1,
-                  my: 0.5,
-                  "&:hover": {
-                    background: "#d7f3f0",
-                    transform: "translateX(6px)",
-                  },
-                  transition: "0.3s",
-                }}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
                 <ListItemText primary={item.text} />
@@ -216,7 +243,7 @@ export default function Navbar() {
 
         <Divider />
 
-        {/* Filter Section */}
+        {/* Filters */}
         <List>
           <ListItemButton onClick={() => setFilterOpen(!filterOpen)}>
             <ListItemIcon>
@@ -226,65 +253,60 @@ export default function Navbar() {
             {filterOpen ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
 
-          <Collapse in={filterOpen} timeout="auto" unmountOnExit>
-            {/* Price Range */}
-            <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 4 }} onClick={() => setPriceOpen(!priceOpen)}>
-                <ListItemIcon>
-                  <MoneyIcon />
-                </ListItemIcon>
-                <ListItemText primary="Price Range" />
-                {priceOpen ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-              <Collapse in={priceOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {["₹0 - ₹500", "₹500 - ₹1000", "₹1000+"].map((range) => (
-                    <ListItemButton key={range} sx={{ pl: 8 }}>
-                      <ListItemText primary={range} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
+          <Collapse in={filterOpen}>
+            {/* PRICE RANGE */}
+            <ListItemButton onClick={() => setPriceOpen(!priceOpen)} sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <MoneyIcon />
+              </ListItemIcon>
+              <ListItemText primary="Price Range" />
+              {priceOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
 
-              {/* Fuel Type */}
-              <ListItemButton sx={{ pl: 4 }} onClick={() => setFuelOpen(!fuelOpen)}>
-                <ListItemIcon>
-                  <FuelIcon />
-                </ListItemIcon>
-                <ListItemText primary="Fuel Type" />
-                {fuelOpen ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-              <Collapse in={fuelOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {["Petrol", "Diesel", "Electric"].map((fuel) => (
-                    <ListItemButton key={fuel} sx={{ pl: 8 }}>
-                      <ListItemText primary={fuel} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
+            <Collapse in={priceOpen}>
+              {["₹0 - ₹500", "₹500 - ₹1000", "₹1000+"].map((range) => (
+                <ListItemButton key={range} sx={{ pl: 8 }}>
+                  <ListItemText primary={range} />
+                </ListItemButton>
+              ))}
+            </Collapse>
 
-              {/* Transmission */}
-              <ListItemButton
-                sx={{ pl: 4 }}
-                onClick={() => setTransmissionOpen(!transmissionOpen)}
-              >
-                <ListItemIcon>
-                  <GearIcon />
-                </ListItemIcon>
-                <ListItemText primary="Transmission" />
-                {transmissionOpen ? <ExpandLess /> : <ExpandMore />}
-              </ListItemButton>
-              <Collapse in={transmissionOpen} timeout="auto" unmountOnExit>
-                <List component="div" disablePadding>
-                  {["Manual", "Automatic"].map((type) => (
-                    <ListItemButton key={type} sx={{ pl: 8 }}>
-                      <ListItemText primary={type} />
-                    </ListItemButton>
-                  ))}
-                </List>
-              </Collapse>
-            </List>
+            {/* FUEL */}
+            <ListItemButton onClick={() => setFuelOpen(!fuelOpen)} sx={{ pl: 4 }}>
+              <ListItemIcon>
+                <FuelIcon />
+              </ListItemIcon>
+              <ListItemText primary="Fuel Type" />
+              {fuelOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+
+            <Collapse in={fuelOpen}>
+              {["Petrol", "Diesel", "Electric"].map((fuel) => (
+                <ListItemButton key={fuel} sx={{ pl: 8 }}>
+                  <ListItemText primary={fuel} />
+                </ListItemButton>
+              ))}
+            </Collapse>
+
+            {/* TRANSMISSION */}
+            <ListItemButton
+              onClick={() => setTransmissionOpen(!transmissionOpen)}
+              sx={{ pl: 4 }}
+            >
+              <ListItemIcon>
+                <GearIcon />
+              </ListItemIcon>
+              <ListItemText primary="Transmission" />
+              {transmissionOpen ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+
+            <Collapse in={transmissionOpen}>
+              {["Manual", "Automatic"].map((type) => (
+                <ListItemButton key={type} sx={{ pl: 8 }}>
+                  <ListItemText primary={type} />
+                </ListItemButton>
+              ))}
+            </Collapse>
           </Collapse>
         </List>
       </Drawer>
